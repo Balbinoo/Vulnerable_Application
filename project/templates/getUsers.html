@@ -14,33 +14,30 @@
     <form id="getUsersForm">
         <label for="hostname">Hostname:</label>
         <input type="text" id="hostname" name="hostname" required>
-        <!-- Mudança aqui: use "button" em vez de "submit" e chame getUsers() no clique -->
         <button type="button" onclick="getUsers()">Search</button>
+        <a href="/home"><button type="button">Back</button></a>
     </form>
 
-    <!-- Display the result here -->
     <div id="result"></div>
 
     <script>
         function getUsers() {
-            // Obter o valor do campo de entrada
             var hostname = document.getElementById("hostname").value;
-
-            // Criar uma instância do objeto XMLHttpRequest
             var xhr = new XMLHttpRequest();
-
-            // Configurar a solicitação
             xhr.open("GET", "/get_users?hostname=" + encodeURIComponent(hostname), true);
 
-            // Configurar a função de retorno de chamada
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    // Atualizar a div 'result' com o resultado da solicitação
-                    document.getElementById("result").innerHTML = xhr.responseText;
+                    var responseData = JSON.parse(xhr.responseText);
+                    var message;
+                    if (responseData.status === "success") {
+                        message = "DNS Lookup Successful:<br><pre>" + responseData.result + "</pre>";
+                    } else {
+                        message = "Error:<br>" + responseData.message;
+                    }
+                    document.getElementById("result").innerHTML = message;
                 }
             };
-
-            // Enviar a solicitação
             xhr.send();
         }
     </script>
