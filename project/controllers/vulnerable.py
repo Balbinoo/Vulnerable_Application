@@ -1,6 +1,5 @@
-from flask import Flask,jsonify,render_template_string,request,Response,render_template
-from flask import render_template, redirect, url_for
-from werkzeug.datastructures import Headers
+from flask import jsonify,render_template_string,request,render_template
+from flask import render_template
 from werkzeug.utils import secure_filename
 import subprocess
 from project import app
@@ -8,7 +7,6 @@ import sqlite3
 import os.path
 import os
 
-#app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 
 @app.route("/home")
 def main_page():
@@ -26,18 +24,9 @@ def hello_page():
 def get_users_page():
     return render_template('getUsers.html')
 
-@app.route("/createFile")
-def create_file_page():
-    return render_template('createFile.html')
-
 @app.route("/upload")
 def upload_page():
     return render_template('upload.html')
-
-
-@app.route("/readFile")
-def readFile():
-    return render_template('readFile.html')
 
 
 @app.route("/get_admin_mail/admin")
@@ -45,28 +34,6 @@ def get_admin_mail_page():
     return render_template('admin.html')
 
 #--------------------------------
-
-@app.route("/user/<string:name>")
-def search_user(name):
-    con = sqlite3.connect("test.db")
-    cur = con.cursor()
-    cur.execute("select * from test where username = '%s'" % name)
-    data = str(cur.fetchall())
-    con.close()
-    import logging
-    logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-    logging.debug(data)
-    return jsonify(data=data),200
-
-@app.route("/welcome/<string:name>")
-def welcome(name):
-    data="Welcome "+name
-    return jsonify(data=data),200
-
-@app.route("/welcome2/<string:name>")
-def welcome2(name):
-    data="Welcome "+name
-    return data
 
 @app.route("/hello")
 def hello_ssti():
@@ -85,88 +52,68 @@ def hello_ssti():
 @app.route("/get_users")
 def get_users():
     try:
-        hostname = request.args.get('hostname')
+        hostname = request.args.get("hostname") 
+
         command = "dig " + hostname
-        data = subprocess.check_output(command, shell=True)
-        
-        return jsonify(result=data)
-    except:
-        data = str(hostname) + " hostname not found"
-        return jsonify(result=data)
+        output = subprocess.check_output(command, shell=True)
 
-@app.route("/get_log/")
-def get_log():
-    try:
-        command="cat restapi.log"
-        data=subprocess.check_output(command,shell=True)
-        return data
-    except:
-        return jsonify(data="Command didn't run"), 200
+        response_data = {
+            "status": "success",
+            "hostname": hostname,
+            "result": output.decode("utf-8")
+        }
 
+        return jsonify(response_data)
+    except Exception as e:
+        response_data = {
+            "status": "error",
+            "message": f"Failed to look up hostname: {str(e)}",
+            "hostname": hostname
+        }
+
+        return jsonify(response_data)
+
+#connection = {}
 
 @app.route('/login', methods=["POST"])
 def login():
-    username=request.args.get("username")
-    password=request.args.get("password")
+
+    data = request.json  # Usar request.json para obter os dados do corpo JSON
+    username = data.get("username")
+    password = data.get("password")
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     db_path = os.path.join(BASE_DIR, "./../models/test.db")
-    print(os.getcwd())
 
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
 
     # Consulta o banco de dados para encontrar um usuário correspondente
     cursor.execute('SELECT * FROM test WHERE username=? AND password=?', (username, password))
-    user = cursor.fetchone()
+    user = cursor.fetchone()  # Apenas uma chamada a fetchone() é suficiente
 
     connection.close()
 
     if user:
         return jsonify(result="Login Succeeded")
     else:
-        return jsonify(result="Login Unsuccedeed")
+        return jsonify(result="Login Unsucceeded")
 
 
 @app.route('/upload', methods=['GET', 'POST'])
 def uploadfile():
-
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, "./upload")
-    app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "./../upload")
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
     if request.method == 'POST':
         f = request.files['file']
         filename = secure_filename(f.filename)
+
+        # Verificar se a pasta de upload existe, senão, criá-la
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return jsonify(result="File uploaded successfully")
     else:
         return render_template('upload.html')
-    
-from flask import request, jsonify
-
-@app.route("/createFile", methods=['POST'])
-def create_file():
-    if request.method == 'POST':
-        f = request.files['file']
-        filename = request.form.get("filename")
-        text = request.form.get("text")
-        
-        # Abre o arquivo para escrita e salva o texto
-        with open(filename, "w") as file:
-            file.write(text)
-
-        # Salva o arquivo enviado pelo formulário
-        f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-        return jsonify(data="File created"), 200
-    else:
-        return jsonify(data="File didn't create"), 200
-
-@app.route('/logs')
-def ImproperOutputNeutralizationforLogs():
-    data = request.args.get('data')
-    import logging
-    logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-    logging.debug(data)
-    return jsonify(data="Logging ok"), 200
-
