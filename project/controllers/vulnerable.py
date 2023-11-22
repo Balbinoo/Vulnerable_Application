@@ -36,7 +36,7 @@ def get_admin_mail_page():
 #--------------------------------
 
 @app.route("/hello")
-def hello_ssti():
+def hello():
     if request.args.get('name'):
         name = request.args.get('name')
         template = f'''<div>
@@ -70,6 +70,7 @@ def get_users():
             "message": f"Failed to look up hostname: {str(e)}",
             "hostname": hostname
         }
+
         return jsonify(response_data)
 
 @app.route('/login', methods=["POST"])
