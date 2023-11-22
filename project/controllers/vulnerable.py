@@ -29,7 +29,7 @@ def upload_page():
     return render_template('upload.html')
 
 
-@app.route("/get_admin_mail/admin")
+@app.route("/admin")
 def get_admin_mail_page():
     return render_template('admin.html')
 
@@ -70,15 +70,12 @@ def get_users():
             "message": f"Failed to look up hostname: {str(e)}",
             "hostname": hostname
         }
-
         return jsonify(response_data)
-
-#connection = {}
 
 @app.route('/login', methods=["POST"])
 def login():
 
-    data = request.json  # Usar request.json para obter os dados do corpo JSON
+    data = request.json 
     username = data.get("username")
     password = data.get("password")
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -87,9 +84,8 @@ def login():
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
 
-    # Consulta o banco de dados para encontrar um usuário correspondente
     cursor.execute('SELECT * FROM test WHERE username=? AND password=?', (username, password))
-    user = cursor.fetchone()  # Apenas uma chamada a fetchone() é suficiente
+    user = cursor.fetchone() 
 
     connection.close()
 
@@ -109,7 +105,6 @@ def uploadfile():
         f = request.files['file']
         filename = secure_filename(f.filename)
 
-        # Verificar se a pasta de upload existe, senão, criá-la
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
             os.makedirs(app.config['UPLOAD_FOLDER'])
 
