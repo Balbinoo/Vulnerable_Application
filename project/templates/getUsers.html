@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="./../static/getUsers.css">
+
+    <title>Get Users</title>
+</head>
+<body>
+
+    <h1>Get DNS</h1>
+
+    <form id="getUsersForm">
+        <label for="hostname">Hostname:</label>
+        <input type="text" id="hostname" name="hostname" required>
+        <!-- Mudança aqui: use "button" em vez de "submit" e chame getUsers() no clique -->
+        <button type="button" onclick="getUsers()">Search</button>
+    </form>
+
+    <!-- Display the result here -->
+    <div id="result"></div>
+
+    <script>
+        function getUsers() {
+            // Obter o valor do campo de entrada
+            var hostname = document.getElementById("hostname").value;
+
+            // Criar uma instância do objeto XMLHttpRequest
+            var xhr = new XMLHttpRequest();
+
+            // Configurar a solicitação
+            xhr.open("GET", "/get_users?hostname=" + encodeURIComponent(hostname), true);
+
+            // Configurar a função de retorno de chamada
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    // Atualizar a div 'result' com o resultado da solicitação
+                    document.getElementById("result").innerHTML = xhr.responseText;
+                }
+            };
+
+            // Enviar a solicitação
+            xhr.send();
+        }
+    </script>
+
+</body>
+</html>

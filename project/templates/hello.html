@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/hello.css">
+    <title>Flask SSTI Example</title>
+</head>
+<body>
+    <h1>Flask SSTI Example</h1>
+
+    <form action="/hello" method="GET">
+        <label for="name">Enter your name:</label>
+        <input type="text" id="name" name="name">
+        <button type="submit">Submit</button>
+        <a href="/home"><button type="button">Voltar</button></a>
+    </form>
+
+
+    <div>
+        <h2>Output:</h2>
+        {% if request.args.get('name') %}
+            <p>Name: {{ request.args.get('name') }}</p>
+        {% endif %}
+    </div>
+
+    <p>Please <a href="home">  click here  </a> to go to return to home page.</p> 
+
+</body>
+</html>
